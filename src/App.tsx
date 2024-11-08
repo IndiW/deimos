@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
+import { Chat } from "./client/Chat";
 
 interface Player {
   name: string;
@@ -33,8 +34,30 @@ const initialPlayers = (names: string[]) => {
   }));
 };
 
+
 const App: React.FC = () => {
-  const [players, setPlayers] = useState<Player[]>(initialPlayers(["Alice", "Bob", "Charlie", "Diana"]));
+  const [players, setPlayers] = useState<Player[]>(initialPlayers(["Bot1", "Bot2", "Bot3", "Bot4"]));
+
+
+  const chat = new Chat('kanipuff', (parsed) => {
+    setPlayers((prevPlayers) => {
+      if (prevPlayers.find(player => player.name === parsed.username)) return prevPlayers;
+      if (parsed.username.length > 100) return prevPlayers;
+      return [...prevPlayers, {
+        name: parsed.username,
+        team: ["red", "blue", "green", "yellow"][Math.floor(Math.random() * 4)],
+        health: 100,
+        x: Math.random() * 800,
+        y: Math.random() * 600,
+        dx: (Math.random() - 0.5) * 2,
+        dy: (Math.random() - 0.5) * 2,
+        isAlive: true,
+      }];
+    })
+  });
+  useEffect(() => {
+    chat.connect();
+  }, [])
 
   const updatePlayers = () => {
     setPlayers((prevPlayers) =>
@@ -56,7 +79,7 @@ const App: React.FC = () => {
         prevPlayers.forEach((other) => {
           if (other.name !== player.name && other.isAlive) {
             const distance = Math.hypot(player.x - other.x, player.y - other.y);
-            if (distance < 40) {
+            if (distance < 20) {
               if (player.team === other.team) {
                 player.health = Math.min(player.health + 1, 100);
                 other.health = Math.min(other.health + 1, 100);
@@ -92,7 +115,7 @@ const App: React.FC = () => {
       {players.map((player) => (
         <div
           key={player.name}
-          className={`absolute w-10 h-10 flex items-center justify-center rounded-full text-white ${teamColors[player.team]
+          className={`absolute w-14 h-14 flex items-center justify-center rounded-full text-white ${teamColors[player.team]
             }`}
           style={{
             left: player.x,
@@ -100,7 +123,10 @@ const App: React.FC = () => {
             opacity: player.isAlive ? 1 : 0.5,
           }}
         >
-          {player.isAlive ? player.name : `Killed by ${player.killer}`}
+          <div className="flex flex-col items-center justify-center">
+            <div className="text-xs">{player.name}</div>
+            <div className="text-xs">{player.isAlive ? `HP: ${player.health}` : `Killed by ${player.killer}`}</div>
+          </div>
         </div>
       ))}
     </div>
