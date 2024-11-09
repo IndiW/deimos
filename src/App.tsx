@@ -41,7 +41,12 @@ const App: React.FC = () => {
 
   const chat = new Chat('kanipuff', (parsed) => {
     setPlayers((prevPlayers) => {
-      if (prevPlayers.find(player => player.name === parsed.username)) return prevPlayers;
+      if (prevPlayers.find(player => player.name === parsed.username)) {
+        if (parsed.message === "!revive") {
+          return prevPlayers.map(player => player.name === parsed.username ? { ...player, isAlive: true, health: 50 } : player);
+        }
+        return prevPlayers
+      };
       if (parsed.username.length > 100) return prevPlayers;
       return [...prevPlayers, {
         name: parsed.username,
